@@ -106,3 +106,5 @@ dist
 
 # (Local only) Test files
 *.cbz
+
+*tags.json

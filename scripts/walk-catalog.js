@@ -2,6 +2,8 @@ const path = require('path');
 const fs = require('fs');
 const nconf = require('nconf')
 const assert = require('assert')
+const moment = require('moment')
+const jsonfile = require('jsonfile')
 
 
 const config = path.join(__dirname, '../config/app.json')
@@ -13,7 +15,7 @@ console.log( CATALOG )
 
 const {memoize} = require('../lib/memoization');
 const { exit } = require('process');
-const { hasTags } = require('../lib/cbzUtils');
+const { hasTags, tags } = require('../lib/cbzUtils');
 
 
 // Validate key environment variables
@@ -54,34 +56,73 @@ function walk(dir){
     
 }
 
+/*
+ Return an array of tags + filename data for all tagged archives
 
+ Summary: return archives.map( archive => {return archive[tags.json]})
+ */
+async function tagData(archives){
 
+    let results = [];
 
-async function catalog(root){
+    while (archives.length){
+        let archive = archives.pop();
 
-    let files = await memoize(walk, root);
+        const start = Date.now();
+        let tags_data = await memoize( tags, archive);
+        const end = Date.now()
+        if ( Object.keys(tags_data).length > 0 ){ // Check for useful data..
+            tags_data = Object.assign( {}, tags_data, {location: archive, file: path.basename(archive)})
+            console.log( `==> extracting tags for ==> ${archives.length} ==> ${archive}, ${end - start} ms`)
+            results.push(tags_data)
+        }else{
+            console.log( ` ==> skipping tags for ==> ${archives.length} ==> ${archive}, ${end - start} ms`)
+        }
+                
+    }
 
-    let archives = files.filter(file => {
-        return file.endsWith('cbz');
-    })
+    return results;
 
-    let tagged = [];
+}
+
+/*
+ Filter a list of archives. Return only those that contain tag data
+
+ Summary: return archives.filter( archive => {return archive[tags.json]})
+ */
+async function tagged(archives){
+
+    let results = [];
 
     while (archives.length){
         let archive = archives.pop();
         let classified = await memoize( hasTags, archive);
-        console.log( `==> ${archives.length} ==> ${archive}, tagged = ${classified}`)
+        console.log( `(${moment().format('LTS')}) ==> checking tags for ==>  ${archives.length} ==> ${archive}, tagged = ${classified}`)
         if ( classified )
-            tagged.push(archive)
+            results.push(archive)
     }
 
-    return tagged;
+    return results;
 }
 
 
+async function catalog(root){
 
-catalog(CATALOG).then( files => {
-    console.log( `${files.length} archives returned`)
+    // Get all files
+    let files = await memoize(walk, root);
+
+    // Just process the CBZ archives
+    let archives = files.filter(file => { return file.endsWith('cbz') })
+    
+    // Extract the tag data
+    let tag_entries = await tagData(archives)
+
+    return tag_entries;
+
+}
+ 
+catalog(CATALOG).then( tags => {
+    return jsonfile.writeFile('catalog-tags.json', tags, {spaces: 4})
 }).catch( err => {
     console.error( `Fatal error: ${err}`);
 }).finally(() => {
