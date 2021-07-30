@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<link rel="stylesheet" href="/static/ml.css">
+
+<script src="/static/jquery-3.6.0.min.js"></script>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>OverStreet</title>
+</head>
+
+<body id='body' class='main-screen'>
+
+  <div id='header' class='controls'> 
+    <div class='title'>Web Box</div>
+    <div id="search" class='search right-flow'>
+      <input type="text" name="country" class="search-input"/>
+      <div class="action">
+        <div id="action-search" class='button'> Search </div>
+      </div>
+    </div>
+  </div>
+
+  <div id='browser' class='browser'>
+
+  </div>
+
+  <div id='footer' class='controls'>
+
+    
+      <div class="trades-toggle">
+        <label for="checkbox-based-flipswitch">Trades:</label>
+        <input type="checkbox" id="trades-flipswitch" >
+      </div>
+
+      <div class='right-flow button-area'>
+        <div class='button' id='action-selected'> Selected </div>
+        <div class='button' id='action-random'> Random </div>
+      </div>
+    
+  </div>
+
+</body>
+
+<script src="/static/ml.js"></script>
+
+
+</html>
